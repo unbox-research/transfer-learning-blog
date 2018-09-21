@@ -2,6 +2,7 @@
 
 # ______________________________________________________________________________
 # Imports
+
 import argparse
 import keras
 import os
@@ -19,6 +20,8 @@ from keras.optimizers   import SGD
 # Constants.
 
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
+IMG_DIR = 'downloads' # This directory stores subdirectories that are image class titles, like 'cat'. 
+					  # Those subdirectories contain the training images for that class.
 INCEPTIONV3 = InceptionV3()
 
 INPUT_HEIGHT = 224
@@ -69,16 +72,16 @@ def build_tl_model(original_model):
 	if args.verbose:
 		print('Model summary before final layer addition:', new_model.summary())
 	
-	IMG_DIR = 'downloads'  # This directory stores subdirectories that are image class titles, like 'cat'. 
-						   # Those subdirectories contain the training images for that class.
 	NUM_CLASSES = len(os.listdir(IMG_DIR))  # How many image classes are in our new data?
 	BOTTLENECK_DIM = original_model.get_layer(index=-2).output.shape.dims[1]  # The number of nodes in the second to last layer of the pre-trained model.
 
 	new_model.add(Dense(NUM_CLASSES, 
-						input_dim  = BOTTLENECK_DIM,
+						input_dim  = 2048,  # BOTTLENECK_DIM
 						activation = 'softmax'))  # Convert outputs to probabilities.
 	if args.verbose:
 		print('Model summary after final layer addition:', new_model.summary())
+		new_model.save('my_model.h5')
+
 	return new_model
 
 # ______________________________________________________________________________
@@ -117,7 +120,7 @@ def retrain(new_model, processed_imgs_array, labels):
 
 	one_hot_labels = keras.utils.to_categorical(labels, num_classes=2)
 
-	new_model.fit(processed_imgs_array, one_hot_labels, epochs=2, batch_size=32)
+	new_model.fit(processed_imgs_array, one_hot_labels, epochs=2, batch_size=20)
 	
 	return new_model
 
